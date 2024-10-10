@@ -1,0 +1,6 @@
+accelerate
+fastapi
+python_dotenv
+torch
+transformers
+uvicorn
