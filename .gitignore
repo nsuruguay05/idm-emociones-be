@@ -1,0 +1,7 @@
+Scripts
+share
+Lib
+Include
+__pycache__
+*.cfg
+.env

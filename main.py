@@ -6,6 +6,8 @@ import os
 import torch
 import uuid
 
+# from rostros import send_robot
+
 # Inicializar la aplicación FastAPI
 app = FastAPI()
 
@@ -21,6 +23,7 @@ dotenv.load_dotenv()
 MODEL_NAME = os.getenv("MODEL_NAME")
 USE_LORA = os.getenv("USE_LORA") == "true"
 CSV_PATH = os.getenv("CSV_PATH")
+WITH_NEUTRAL = os.getenv("WITH_NEUTRAL") == "true"
 
 # Cargar tokenizer
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
@@ -32,9 +35,22 @@ model_llm = AutoModelForCausalLM.from_pretrained(
 )
 
 # Definir las emociones
-emotions = ["Alegría", "Tristeza", "Neutral", "Ira", "Miedo", "Sorpresa"]
+emotions = ["Alegría", "Tristeza", "Ira", "Miedo", "Sorpresa"]
 
-def createPrompt(sentence):
+if WITH_NEUTRAL:
+    emotions.append("Neutral")
+
+# Diccionario para pasar de emoción en español a emoción en inglés
+emotions_dict = {
+    "Alegría": "happy",
+    "Tristeza": "sad",
+    "Neutral": "neutral",
+    "Ira": "angry",
+    "Miedo": "fear",
+    "Sorpresa": "surprise"
+}
+
+def create_prompt(sentence):
     '''
     Dada una oración, crea la prompt para el modelo de lenguaje. Se usan prompts distintas en función de si es un finetuning o no.
     
@@ -113,11 +129,14 @@ def get_emotion(sentence: str):
     if not sentence:
         raise HTTPException(status_code=400, detail="Sentence parameter is required.")
 
-    prompt = createPrompt(sentence)
+    prompt = create_prompt(sentence)
     emotion_probs = get_token_probabilities(prompt)
 
     emotion_idx = emotion_probs.argmax()
     emotion = emotions[emotion_idx]
+
+    # Enviar la emoción al robot
+    # send_robot(emotions_dict[emotion])
 
     id = str(uuid.uuid4())[:4]
 
